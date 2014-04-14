@@ -5,6 +5,13 @@
     <string name="action_settings">Настройки</string>
     <string name="action_search">Поиск</string>
     <string name="action_refresh">Обновить</string>
+    <string name="action_week">Сменить неделю</string>
     <string name="hello_world">Hello world!</string>
     <string name="tab_mon">Понедельник</string>
+    <string name="first_week">первая неделя</string>
+    <string name="second_week">вторая неделя</string>
+    <string name="settings_view">Настройки</string>
+    <string name="pref_title_basic">Основные</string>
+    <string name="pref_title_groupname">Группа</string>
+    <string name="pref_title_showall">Показывать все пары?</string>
 </resources>

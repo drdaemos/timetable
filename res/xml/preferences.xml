@@ -1,0 +1,10 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory 
+        android:title="@string/pref_title_basic">
+        <EditTextPreference android:title="@string/pref_title_groupname" android:key="pref_key_groupname" android:defaultValue="ПИбд-31"/>
+        <CheckBoxPreference android:title="@string/pref_title_showall" android:key="pref_key_showall" android:defaultValue="false"/>
+        <Preference android:title="Обновить расписания"
+                android:key="updBtn"
+                android:summary="Обновление всех сохраненных расписаний"/>
+    </PreferenceCategory>
+</PreferenceScreen>

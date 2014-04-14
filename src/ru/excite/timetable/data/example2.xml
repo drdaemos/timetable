@@ -1,0 +1,14 @@
+<courseData>
+   <course title="Test Course">
+      <ICoursePart class="ru.excite.etiquette.data.ChoicePart" answer="1">
+         <variant>choice 1</variant>
+         <variant>choice 2</variant>
+         <variant>choice 3</variant>
+         <variant>choice 4</variant>
+         <content><![CDATA[<p>choice part</p>]]></content>
+      </ICoursePart>
+      <ICoursePart class="ru.excite.etiquette.data.TheoryPart">
+         <content><![CDATA[<p>theory part</p>]]></content>
+      </ICoursePart>
+   </course>
+</courseData>

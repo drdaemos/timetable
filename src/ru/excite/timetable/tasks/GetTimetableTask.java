@@ -5,16 +5,19 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 
 import org.holoeverywhere.app.Activity;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import ru.excite.timetable.GroupUrl;
-import ru.excite.timetable.TimetableData;
+import ru.excite.timetable.data.GroupUrl;
+import ru.excite.timetable.data.TimetableData;
+import ru.excite.timetable.data.TtSubjectItem;
 import android.util.Log;
 
 public class GetTimetableTask extends
 		ListenableAsyncTask<GroupUrl, Void, TimetableData[]> {
+	public static final int NOT_MODIFIED = 304;
 	private static final int LESSONS_QTY = 8;
 
 	public GetTimetableTask(
@@ -31,18 +34,7 @@ public class GetTimetableTask extends
 		LinkedList<String> ret = new LinkedList<String>();
 		if (week) {
 			for (Element a : doc.body().getElementsMatchingOwnText(str).first()
-					.parents().get(4).getElementsByTag("P")) // 4 - потому что
-																// текст дня
-																// недели лежит
-																// в теге 4ой
-																// степени
-																// вложенности
-																// от TR в
-																// котором
-																// хранится
-																// рассписание
-																// на весь день
-			{
+					.parents().get(4).getElementsByTag("P")) {
 				ret.add(a.text());
 			}
 		} else {
@@ -64,6 +56,7 @@ public class GetTimetableTask extends
 		while (listIterator.hasNext()) {
 			ret[i] = listIterator.next().text();
 			System.out.println(ret[i]);
+			i++;
 		}
 		return ret;
 	}
@@ -73,22 +66,53 @@ public class GetTimetableTask extends
 		TimetableData[] result = new TimetableData[urls.length];
 		int _count = 12;
 		for (int groupI = 0; groupI < urls.length; groupI++) {
-			ArrayList<LinkedList<String>> table = new ArrayList<LinkedList<String>>(
+			ArrayList<LinkedList<TtSubjectItem>> table = new ArrayList<LinkedList<TtSubjectItem>>(
 					_count);
 			String time[] = null;
 			try {
-				Document doc = Jsoup.connect(urls[groupI].getUrl()).get();
-				for (int i = 0; i < _count; i++) {
-					if (i < 6) {
-						table.add(getFromDay(days[i], doc, true));
-					} else {
-						table.add(getFromDay(days[i - 6], doc, false));
-					}
+				Connection con = Jsoup.connect(urls[groupI].getUrl());
+				if(urls[groupI].geteTag() != null){
+					con.header("If-None-Match", urls[groupI].geteTag());	
 				}
-				time = getTimeList(doc);
-				String name = urls[groupI].getName();
-				result[groupI] = new TimetableData(table, time, name);
-				Log.d("GetTimetableTask", "ended fetch for " + name);
+				Document doc = con.get();
+				if(con.response().statusCode() != NOT_MODIFIED){	
+					Log.d("GetTimetableTask", urls[groupI].getName() + " has been modified. Updating data.");
+					time = getTimeList(doc);
+					for (int i = 0; i < _count; i++) {
+						if (i < 6) {
+							// table.add(getFromDay(days[i], doc, true));
+							LinkedList<String> subjectStrings = getFromDay(days[i],
+									doc, true);
+							LinkedList<TtSubjectItem> convertedLessons = new LinkedList<TtSubjectItem>();
+							int lessonI = 0;
+							for (String subject : subjectStrings) {
+								convertedLessons.add(new TtSubjectItem(subject,
+										time[lessonI], i, false));
+								//Log.d("writing data to ttsubj", time[lessonI] + "|"+ lessonI);
+								lessonI++;
+							}
+							table.add(convertedLessons);
+						} else {
+							// table.add(getFromDay(days[i - 6], doc, false));
+							LinkedList<String> subjectStrings = getFromDay(
+									days[i - 6], doc, false);
+							LinkedList<TtSubjectItem> convertedLessons = new LinkedList<TtSubjectItem>();
+							int lessonI = 0;
+							for (String subject : subjectStrings) {
+								convertedLessons.add(new TtSubjectItem(subject,
+										time[lessonI], i, true));
+								Log.d("writing data to ttsubj", time[lessonI] + "|"
+										+ lessonI);
+								lessonI++;
+							}
+							table.add(convertedLessons);
+						}
+					}
+					String name = urls[groupI].getName();
+					result[groupI] = new TimetableData(table, name);
+					result[groupI].eTag = con.response().header("ETag");
+					Log.d("GetTimetableTask", "ended fetch for " + name);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
